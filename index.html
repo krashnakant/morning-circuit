@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>:root{color-scheme:light dark}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Morning Circuit</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;800&family=Public+Sans:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#E7E4DE; --panel:#F5F3EF; --sunk:#DCD8D0;
+  --ink:#191B22; --ink-2:#42454F; --muted:#73757F;
+  --line:#CFCAC1; --line-soft:#DFDBD3;
+  --blue:#2739C9; --blue-soft:#E1E3F8; --blue-ink:#1B268C;
+  --flame:#D8461E; --flame-soft:#F7E0D8;
+  --good:#1F7A4D; --warn:#9A6210;
+  --shadow:0 1px 0 rgba(25,27,34,.06), 0 8px 24px -18px rgba(25,27,34,.5);
+  --display:"Saira Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body:"Public Sans", system-ui, -apple-system, sans-serif;
+  --mono:"Roboto Mono", ui-monospace, SFMono-Regular, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#14151A; --panel:#1C1E25; --sunk:#101116;
+    --ink:#ECEAE4; --ink-2:#B7B9C2; --muted:#878A95;
+    --line:#2E313A; --line-soft:#24272F;
+    --blue:#7A87FF; --blue-soft:#212648; --blue-ink:#AEB6FF;
+    --flame:#FF7B4D; --flame-soft:#3A2018;
+    --good:#4FBF87; --warn:#E0A64A;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 10px 30px -20px #000;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#14151A; --panel:#1C1E25; --sunk:#101116;
+  --ink:#ECEAE4; --ink-2:#B7B9C2; --muted:#878A95;
+  --line:#2E313A; --line-soft:#24272F;
+  --blue:#7A87FF; --blue-soft:#212648; --blue-ink:#AEB6FF;
+  --flame:#FF7B4D; --flame-soft:#3A2018;
+  --good:#4FBF87; --warn:#E0A64A;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 10px 30px -20px #000;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:var(--body); font-size:15px; line-height:1.5;
+  padding:0 18px; padding-block:22px 44px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px; margin:0 auto; display:flex; flex-direction:column; gap:20px}
+h1,h2,h3{margin:0; font-family:var(--display); font-weight:800; text-wrap:balance; letter-spacing:.005em}
+.eyebrow{font-family:var(--body); font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+.mono{font-family:var(--mono); font-variant-numeric:tabular-nums}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:2px solid var(--blue); outline-offset:2px; border-radius:2px}
+
+/* ---------- masthead ---------- */
+.top{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  border-bottom:2px solid var(--ink); padding-bottom:12px}
+.brand h1{font-size:clamp(30px,5.4vw,46px); line-height:.94; text-transform:uppercase; letter-spacing:-.01em}
+.brand p{margin:5px 0 0; color:var(--muted); font-size:13px; max-width:46ch}
+.badges{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.streak{display:flex; align-items:baseline; gap:7px; padding:7px 12px 6px; background:var(--flame-soft);
+  border:1px solid var(--flame); color:var(--flame)}
+.streak b{font-family:var(--display); font-size:26px; line-height:1; font-weight:800}
+.streak span{font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase}
+.slotpick{display:flex; border:1px solid var(--line); background:var(--panel)}
+.slotpick button{background:none; border:0; padding:8px 13px; font-size:11px; font-weight:700;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+.slotpick button[aria-pressed="true"]{background:var(--ink); color:var(--ground)}
+
+/* ---------- banner ---------- */
+.banner{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+  padding:11px 14px; border-left:4px solid var(--blue); background:var(--panel); box-shadow:var(--shadow); font-size:13.5px}
+.banner.warn{border-left-color:var(--warn)}
+.banner.done{border-left-color:var(--good)}
+.banner button{background:none; border:1px solid var(--line); padding:5px 10px; font-size:12px}
+
+/* ---------- main grid ---------- */
+.stage{display:grid; grid-template-columns:minmax(0,1.45fr) minmax(280px,.95fr); gap:20px; align-items:start}
+@media (max-width:860px){.stage{grid-template-columns:1fr}}
+
+/* viewfinder */
+.finder{position:relative; background:var(--sunk); border:1px solid var(--line); overflow:hidden;
+  aspect-ratio:4/3; max-width:100%}
+.finder video{width:100%; height:100%; object-fit:cover; transform:scaleX(-1); display:block; background:var(--sunk)}
+.finder .idle{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; text-align:center; padding:24px; color:var(--muted)}
+.finder .idle strong{font-family:var(--display); font-size:19px; font-weight:600; color:var(--ink-2); letter-spacing:.02em}
+.finder .idle p{margin:0; font-size:13px; max-width:36ch}
+.hud{position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between}
+.hud-top{display:flex; justify-content:space-between; align-items:flex-start; padding:12px 14px; gap:10px}
+.rec{display:flex; align-items:center; gap:7px; background:rgba(10,10,14,.62); color:#fff; padding:5px 10px;
+  font-size:10px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; backdrop-filter:blur(3px)}
+.rec i{width:8px; height:8px; border-radius:50%; background:var(--flame); display:block; animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.tally{margin-left:auto; background:rgba(10,10,14,.62); color:#fff; padding:6px 13px 4px; text-align:right; backdrop-filter:blur(3px)}
+.tally b{font-family:var(--display); font-weight:800; font-size:clamp(34px,7vw,54px); line-height:.9; display:block;
+  font-variant-numeric:tabular-nums}
+.tally span{font-family:var(--mono); font-size:11px; opacity:.8; letter-spacing:.04em}
+.trace{height:54px; background:rgba(10,10,14,.55); backdrop-filter:blur(3px)}
+.trace canvas{width:100%; height:54px; display:block}
+
+/* controls */
+.controls{display:flex; flex-direction:column; gap:10px; margin-top:12px}
+.btnrow{display:flex; gap:9px; flex-wrap:wrap}
+.btn{border:1px solid var(--ink); background:var(--ink); color:var(--ground); padding:11px 18px;
+  font-family:var(--display); font-size:16px; font-weight:600; letter-spacing:.06em; text-transform:uppercase}
+.btn.ghost{background:transparent; color:var(--ink); border-color:var(--line)}
+.btn.tap{flex:1; min-width:150px; border-color:var(--blue); background:var(--blue-soft); color:var(--blue-ink)}
+.btn.tap:active{background:var(--blue); color:#fff}
+.btn.icon{padding:11px 14px; font-family:var(--mono); font-size:15px}
+.btn[disabled]{opacity:.4; cursor:not-allowed}
+.tune{display:flex; align-items:center; gap:12px; padding:10px 13px; border:1px solid var(--line-soft); background:var(--panel); flex-wrap:wrap}
+.tune label{font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+.tune input[type=range]{flex:1; min-width:120px; accent-color:var(--blue)}
+.tune .val{font-family:var(--mono); font-size:12px; color:var(--ink-2); min-width:78px; text-align:right}
+.toggle{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink-2); white-space:nowrap}
+.toggle input{accent-color:var(--blue); width:15px; height:15px}
+
+/* station rail */
+.rail{background:var(--panel); border:1px solid var(--line-soft); box-shadow:var(--shadow)}
+.rail-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:13px 15px 11px; border-bottom:1px solid var(--line-soft)}
+.rail-head h2{font-size:17px; text-transform:uppercase; letter-spacing:.04em}
+.rail-head .mono{font-size:12px; color:var(--muted)}
+.station{display:grid; grid-template-columns:26px 1fr auto; gap:11px; align-items:center; width:100%;
+  padding:11px 15px; background:none; border:0; border-bottom:1px solid var(--line-soft); text-align:left;
+  border-left:3px solid transparent}
+.station:last-child{border-bottom:0}
+.station .num{font-family:var(--mono); font-size:12px; color:var(--muted)}
+.station .nm{font-family:var(--display); font-size:17px; font-weight:600; letter-spacing:.02em; line-height:1.1}
+.station .cue{font-size:11.5px; color:var(--muted); line-height:1.35; margin-top:1px}
+.station .ct{font-family:var(--mono); font-size:13px; color:var(--ink-2); white-space:nowrap}
+.station .bar{grid-column:2/4; height:3px; background:var(--sunk); overflow:hidden}
+.station .bar i{display:block; height:100%; background:var(--blue); transition:width .25s}
+.station[aria-current="true"]{border-left-color:var(--blue); background:var(--blue-soft)}
+.station[data-done="true"] .nm{color:var(--muted)}
+.station[data-done="true"] .ct{color:var(--good)}
+.station[data-done="true"] .bar i{background:var(--good)}
+.rail-foot{padding:12px 15px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+  border-top:1px solid var(--line-soft)}
+.ring{display:flex; align-items:center; gap:11px}
+.ring svg{display:block}
+.ring .pct{font-family:var(--display); font-size:24px; font-weight:800; line-height:1}
+.ring .sub{font-size:11.5px; color:var(--muted)}
+
+/* lower panels */
+.lower{display:grid; grid-template-columns:minmax(0,1.45fr) minmax(280px,.95fr); gap:20px; align-items:start}
+@media (max-width:860px){.lower{grid-template-columns:1fr}}
+.card{background:var(--panel); border:1px solid var(--line-soft); box-shadow:var(--shadow); padding:15px}
+.card h2{font-size:17px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:3px}
+.card .note{font-size:12.5px; color:var(--muted); margin:0 0 13px}
+.grid35{display:grid; grid-template-columns:repeat(14,1fr); gap:5px}
+@media (max-width:560px){.grid35{grid-template-columns:repeat(7,1fr)}}
+.cell{aspect-ratio:1; background:var(--sunk); position:relative; overflow:hidden; border:1px solid transparent}
+.cell i{position:absolute; left:0; right:0; bottom:0; background:var(--blue); display:block}
+.cell[data-full="true"] i{background:var(--good)}
+.cell[data-today="true"]{border-color:var(--ink)}
+.stats{display:flex; gap:22px; flex-wrap:wrap; margin-top:15px; padding-top:13px; border-top:1px solid var(--line-soft)}
+.stat b{display:block; font-family:var(--display); font-size:25px; font-weight:800; line-height:1.05; font-variant-numeric:tabular-nums}
+.stat span{font-size:10.5px; font-weight:700; letter-spacing:.11em; text-transform:uppercase; color:var(--muted)}
+.field{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px}
+.field input[type=time]{font-family:var(--mono); font-size:16px; padding:7px 9px; background:var(--ground);
+  color:var(--ink); border:1px solid var(--line)}
+.kv{display:flex; justify-content:space-between; gap:12px; font-size:12.5px; padding:6px 0; border-bottom:1px dashed var(--line-soft)}
+.kv:last-of-type{border-bottom:0}
+.kv span{color:var(--muted)}
+.footnote{font-size:12px; color:var(--muted); line-height:1.55; border-top:1px solid var(--line); padding-top:14px}
+.footnote b{color:var(--ink-2)}
+@media (prefers-reduced-motion: reduce){*{animation:none !important; transition:none !important}}
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <h1>Morning Circuit</h1>
+      <p>Seven stations, 275 reps, on the floor you already have. The camera counts the rhythm — nothing leaves this device.</p>
+    </div>
+    <div class="badges">
+      <div class="streak"><b id="streakNum">0</b><span>day<br>streak</span></div>
+      <div class="slotpick" role="group" aria-label="Session">
+        <button id="slotAm" aria-pressed="true">Morning</button>
+        <button id="slotPm" aria-pressed="false">Evening</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="banner" id="banner">
+    <div id="bannerText">Today's morning circuit hasn't been logged yet. Station 1 is 100 hops.</div>
+    <button id="bannerBtn" type="button" hidden></button>
+  </div>
+
+  <section class="stage">
+    <div>
+      <div class="finder">
+        <video id="cam" autoplay playsinline webkit-playsinline muted hidden></video>
+        <div class="idle" id="idle">
+          <strong>Camera off</strong>
+          <p id="idleMsg">Prop your phone or laptop against a wall, 2–3 m back, so your whole body is in frame. Press Start counting.</p>
+          <code class="mono" id="camCode" hidden style="font-size:11px;line-height:1.5;letter-spacing:.03em;padding:5px 9px;border:1px solid var(--line);color:var(--muted);max-width:40ch;text-align:center"></code>
+        </div>
+        <div class="hud">
+          <div class="hud-top">
+            <div class="rec" id="rec" hidden><i></i> Counting</div>
+            <div class="tally">
+              <b id="count">0</b>
+              <span id="countSub">of 100 hops</span>
+            </div>
+          </div>
+          <div class="trace"><canvas id="trace" width="900" height="108"></canvas></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="btnrow">
+          <button class="btn" id="startBtn" type="button">Start counting</button>
+          <button class="btn tap" id="tapBtn" type="button">Tap to count +1</button>
+          <button class="btn ghost icon" id="minusBtn" type="button" aria-label="Remove one rep">−1</button>
+          <button class="btn ghost icon" id="resetBtn" type="button" aria-label="Reset this station">Reset</button>
+        </div>
+        <div class="btnrow">
+          <button class="btn ghost" id="diagBtn" type="button" style="font-size:13px">Diagnostics</button>
+        </div>
+        <pre id="diag" class="mono" hidden style="margin:0; padding:11px 13px; background:var(--sunk); border:1px solid var(--line); font-size:11.5px; line-height:1.7; overflow-x:auto; color:var(--ink-2)"></pre>
+        <div class="tune">
+          <label for="sens">Sensitivity</label>
+          <input type="range" id="sens" min="0.5" max="2.6" step="0.1" value="1.3">
+          <span class="val mono" id="sensVal">1.3 ×</span>
+          <span class="toggle"><input type="checkbox" id="sound" checked><label for="sound" style="text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:400;color:var(--ink-2)">Beep each rep</label></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rail">
+      <div class="rail-head">
+        <h2>The circuit</h2>
+        <span class="mono" id="elapsed">00:00</span>
+      </div>
+      <div id="stations"></div>
+      <div class="rail-foot">
+        <div class="ring">
+          <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true">
+            <circle cx="26" cy="26" r="22" fill="none" stroke="var(--sunk)" stroke-width="6"></circle>
+            <circle id="arc" cx="26" cy="26" r="22" fill="none" stroke="var(--blue)" stroke-width="6"
+              stroke-linecap="butt" stroke-dasharray="138.2" stroke-dashoffset="138.2"
+              transform="rotate(-90 26 26)"></circle>
+          </svg>
+          <div>
+            <div class="pct" id="pct">0%</div>
+            <div class="sub" id="repsSub">0 of 275 reps</div>
+          </div>
+        </div>
+        <button class="btn ghost" id="nextBtn" type="button">Next station</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="lower">
+    <div class="card">
+      <h2>Last 35 days</h2>
+      <p class="note">One square per day, filled by reps completed. Solid when the full circuit is done.</p>
+      <div class="grid35" id="history"></div>
+      <div class="stats">
+        <div class="stat"><b id="sBest">0</b><span>Best streak</span></div>
+        <div class="stat"><b id="sDays">0</b><span>Circuits done</span></div>
+        <div class="stat"><b id="sReps">0</b><span>Reps counted</span></div>
+        <div class="stat"><b id="sAvg">—</b><span>Median time</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Daily reminder</h2>
+      <p class="note">Kept on this device. Fires while this page is open — set a phone alarm too if you close it.</p>
+      <div class="field">
+        <input type="time" id="remTime" value="06:45">
+        <span class="toggle"><input type="checkbox" id="remOn"><label for="remOn">Remind me</label></span>
+      </div>
+      <div class="kv"><span>Next nudge</span><b class="mono" id="remNext">off</b></div>
+      <div class="kv"><span>Notifications</span><b class="mono" id="remPerm">in-page only</b></div>
+      <div class="kv"><span>Evening round</span><b class="mono">optional</b></div>
+      <div class="kv"><span>Storage</span><b class="mono" id="storeState">this device</b></div>
+      <div class="btnrow" style="margin-top:12px">
+        <button class="btn ghost" id="backupBtn" type="button">Copy backup</button>
+      </div>
+    </div>
+  </section>
+
+  <p class="footnote">
+    <b>How the counting works.</b> Frames from your camera are compared to each other inside this page —
+    a moving-average motion signal, band-passed, with one rep counted per motion cycle and a minimum
+    gap per exercise (0.26 s for hops, 0.85 s for squats and pushups). No video, no frames and no model
+    calls ever leave the device; there is no server in this page. It reads rhythm, not joint angles, so
+    a shaky count is normal on the first try — slide Sensitivity until the ticks on the trace line up
+    with your reps, or use Tap to count. <b>Framing:</b> standing work full-body and face-on; pushups,
+    mountain climbers and lunges read best side-on with the phone low.
+  </p>
+</div>
+
+<script>
+"use strict";
+const STATIONS = [
+  {k:"hops",   n:"Hops",              t:100, gap:0.38, cue:"Like jumping rope, no rope. Face-on, full body in frame."},
+  {k:"swings", n:"Arm swings",        t:25,  gap:0.85, cue:"Both arms overhead and back down. Stand back so hands stay in frame."},
+  {k:"squats", n:"Body squats",       t:25,  gap:1.25, cue:"Feet shoulder-width, heels down. Side-on reads cleanest."},
+  {k:"push",   n:"Pushups",           t:25,  gap:1.15, cue:"Phone on the floor, side-on, level with your shoulders."},
+  {k:"climb",  n:"Mountain climbers", t:50,  gap:0.24, cue:"Count one per knee drive. Phone low and side-on."},
+  {k:"jacks",  n:"Jumping jacks",     t:25,  gap:0.65, cue:"Arms and legs together. Full body, face-on."},
+  {k:"lunge",  n:"Lunges",            t:25,  gap:1.20, cue:"Alternate legs, one count per step. Side-on."}
+];
+const TOTAL = STATIONS.reduce((a,s)=>a+s.t,0);
+const KEY = "morning-circuit.v1";
+
+/* ---------- local storage ---------- */
+let store = {days:{}, prefs:{sens:1.3, sound:true, reminder:"06:45", reminderOn:false}};
+let storageOk = true;
+try{ const raw = localStorage.getItem(KEY); if(raw) store = Object.assign(store, JSON.parse(raw)); }
+catch(e){ storageOk = false; }
+let saveTimer = null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    try{ localStorage.setItem(KEY, JSON.stringify(store)); }
+    catch(e){ storageOk = false; document.getElementById("storeState").textContent = "unavailable"; }
+  }, 500);
+}
+const dayKey = d => { const x = d||new Date(); return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0"); };
+function slotRec(day, slot, make){
+  const d = store.days[day] || (make ? (store.days[day] = {}) : null);
+  if(!d) return null;
+  return d[slot] || (make ? (d[slot] = {counts:{}, sec:0, done:false}) : null);
+}
+
+/* ---------- session state ---------- */
+const today = dayKey();
+const state = {slot:"am", idx:0, counts:{}, running:false, t0:0, sec:0};
+(function restore(){
+  const r = slotRec(today, "am", false);
+  if(r){ state.counts = Object.assign({}, r.counts); state.sec = r.sec||0; }
+  const first = STATIONS.findIndex(s => (state.counts[s.k]||0) < s.t);
+  state.idx = first < 0 ? STATIONS.length-1 : first;
+})();
+const cur = () => STATIONS[state.idx];
+const at  = k => state.counts[k] || 0;
+const doneReps = () => STATIONS.reduce((a,s)=>a+Math.min(at(s.k), s.t), 0);
+const allDone = c => STATIONS.every(s => (c[s.k]||0) >= s.t);
+
+/* ---------- audio ---------- */
+let ac = null;
+function beep(freq, dur, vol){
+  if(!store.prefs.sound) return;
+  try{
+    ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state === "suspended") ac.resume();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = "triangle"; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol||0.09, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + (dur||0.07));
+    o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime + (dur||0.07) + 0.01);
+  }catch(e){}
+}
+
+/* ---------- rep detector: frame differencing + band-passed motion energy ---------- */
+const CW = 64, CH = 48;
+const work = document.createElement("canvas");
+work.width = CW; work.height = CH;
+const wctx = work.getContext("2d", {willReadFrequently:true});
+const dbg = {gum:"not called", frames:0, energy:0, band:0, thr:0, reps:0, err:"none", started:0};
+let prevGray = null, fast = 0, slow = 0, noise = 0.004, armed = false, lastRep = 0, lastMotion = 0;
+const traceBuf = new Array(180).fill(0);
+const tickBuf  = new Array(180).fill(0);
+
+function sampleFrame(video, now){
+  wctx.drawImage(video, 0, 0, CW, CH);
+  const d = wctx.getImageData(0, 0, CW, CH).data;
+  const gray = new Uint8Array(CW*CH);
+  let sum = 0;
+  for(let i=0, p=0; i<gray.length; i++, p+=4){
+    gray[i] = (d[p]*77 + d[p+1]*150 + d[p+2]*29) >> 8;
+    if(prevGray){ const diff = Math.abs(gray[i] - prevGray[i]); if(diff > 14) sum += diff; }
+  }
+  prevGray = gray;
+  const energy = sum / (gray.length * 255);
+
+  fast += (energy - fast) * 0.34;
+  slow += (energy - slow) * 0.035;
+  const band = fast - slow;
+  noise += (Math.abs(band) - noise) * 0.02;
+
+  const thr = Math.max(0.0012, noise * store.prefs.sens);
+  const moving = slow > 0.0018;
+  if(moving) lastMotion = now;
+
+  let fired = false;
+  if(!armed && band < -thr * 0.45) armed = true;
+  if(armed && moving && band > thr && (now - lastRep) > cur().gap * 1000){
+    armed = false; lastRep = now; fired = true;
+  }
+  dbg.frames++; dbg.energy = energy; dbg.band = band; dbg.thr = thr;
+  traceBuf.push(band / (thr * 2.2)); traceBuf.shift();
+  tickBuf.push(fired ? 1 : 0); tickBuf.shift();
+  return fired;
+}
+
+/* ---------- trace strip ---------- */
+const trace = document.getElementById("trace"), tctx = trace.getContext("2d");
+function drawTrace(){
+  const w = trace.width, h = trace.height, mid = h/2;
+  tctx.clearRect(0,0,w,h);
+  const css = getComputedStyle(document.documentElement);
+  tctx.strokeStyle = "rgba(255,255,255,.22)"; tctx.lineWidth = 1;
+  tctx.beginPath(); tctx.moveTo(0, mid + h*0.22); tctx.lineTo(w, mid + h*0.22);
+  tctx.moveTo(0, mid - h*0.22); tctx.lineTo(w, mid - h*0.22); tctx.stroke();
+  tctx.strokeStyle = css.getPropertyValue("--flame").trim() || "#FF7B4D";
+  tctx.lineWidth = 2; tctx.beginPath();
+  for(let i=0;i<traceBuf.length;i++){
+    const x = i/(traceBuf.length-1)*w;
+    const y = mid - Math.max(-1.6, Math.min(1.6, traceBuf[i])) * (h*0.42);
+    i ? tctx.lineTo(x,y) : tctx.moveTo(x,y);
+  }
+  tctx.stroke();
+  tctx.fillStyle = "#fff";
+  for(let i=0;i<tickBuf.length;i++){
+    if(!tickBuf[i]) continue;
+    const x = i/(tickBuf.length-1)*w;
+    tctx.fillRect(x-1.5, 0, 3, 9);
+  }
+}
+
+/* ---------- camera loop ---------- */
+const video = document.getElementById("cam");
+let stream = null, rafId = 0;
+const CAM_HELP = {
+  NoMediaDevices:  "This browser isn't handing the camera to the embedded page. Open the artifact in its own tab, or use Tap to count +1.",
+  NotAllowedError: "Refused without asking. Check three places, outermost first: macOS System Settings → Privacy & Security → Camera, and switch your browser on there. Then the site itself: Safari → Settings → Websites → Camera, or the camera icon in Chrome's address bar. An embedded page is refused this way too — run the local copy instead.",
+  NotReadableError:"Another app is holding the camera \u2014 Zoom, FaceTime, Photo Booth. Quit it and press Start counting again.",
+  NotFoundError:   "No camera found on this device.",
+  SecurityError:   "The page is not allowed to open a camera here. Open it in its own tab, or use Tap to count +1."
+};
+async function getCam(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    const e = new Error("mediaDevices unavailable"); e.name = "NoMediaDevices"; throw e;
+  }
+  // one call only: a second getUserMedia after an await is outside the user-gesture
+  // window, which iOS refuses. Frames are downscaled to 64x48 anyway, so no constraints.
+  return await navigator.mediaDevices.getUserMedia({video:true, audio:false});
+}
+async function preflight(){
+  const el = document.getElementById("camCode");
+  const framed = (window.self !== window.top);
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    el.textContent = "No camera API on this page" + (framed ? " \u00b7 it is embedded in a frame" : " \u00b7 needs https or localhost");
+    el.hidden = false; return;
+  }
+  let cams = null;
+  try{ cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput"); }catch(e){}
+  if(!cams){ el.textContent = "Camera status unknown"; }
+  else if(cams.length === 0){
+    el.textContent = "Camera list stays hidden until you allow it — press Start counting";
+  } else {
+    el.textContent = cams.length + " camera detected \u00b7 " + (cams[0].label ? "already allowed here" : "not yet allowed here")
+      + (framed ? " \u00b7 page is embedded, which can block it with no prompt" : "");
+  }
+  el.hidden = false;
+}
+async function probeDevices(name){
+  const el = document.getElementById("camCode");
+  try{
+    const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+    el.textContent = name + " · " + (cams.length
+      ? cams.length + " camera" + (cams.length > 1 ? "s" : "") + " present, " + (cams[0].label ? "allowed here before" : "never allowed here")
+      : "no camera visible to this browser");
+  }catch(e){ el.textContent = name + " · device list unavailable"; }
+}
+async function startCam(){
+  const sb = document.getElementById("startBtn");
+  sb.disabled = true; sb.textContent = "Requesting camera\u2026";
+  dbg.gum = "requesting\u2026";
+  try{
+    dbg.err = "none"; dbg.frames = 0; dbg.started = Date.now();
+    stream = await getCam();
+    dbg.gum = "granted";
+    video.srcObject = stream;
+    video.muted = true;
+    video.playsInline = true;
+    // unhide BEFORE play(): iOS Safari will not start a display:none video,
+    // so a granted camera used to land in the catch block below.
+    video.hidden = false;
+    document.getElementById("idle").hidden = true;
+    document.getElementById("rec").hidden = false;
+    try{ await video.play(); }catch(e){}
+    state.running = true; state.t0 = Date.now() - state.sec*1000;
+    prevGray = null; fast = slow = 0; noise = 0.004; armed = false; lastRep = 0; lastMotion = performance.now();
+    sb.disabled = false; sb.textContent = "Stop camera";
+    loop();
+    render();
+    setTimeout(()=>{
+      if(state.running && dbg.frames === 0){
+        setBanner("Camera opened but sent no frames \u2014 readyState " + video.readyState + ", " + video.videoWidth + "\u00d7" + video.videoHeight + ". Diagnostics are open below.", "warn");
+        showDiag(true);
+      }
+    }, 3000);
+  }catch(err){
+    sb.disabled = false; sb.textContent = "Start counting";
+    const name = (err && err.name) || "Error";
+    dbg.gum = "rejected"; dbg.err = name + ": " + ((err && err.message) || "");
+    showDiag(true);
+    const msg = CAM_HELP[name] || ("Camera failed to start (" + name + "). Tap to count +1 works for the whole circuit.");
+    document.getElementById("idleMsg").textContent = msg;
+    document.getElementById("camCode").textContent = name + " · checking…";
+    probeDevices(name);
+    document.getElementById("camCode").hidden = false;
+    document.getElementById("idle").hidden = false;
+    setBanner(msg, "warn");
+  }
+}
+function stopCam(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
+  video.srcObject = null;
+  video.hidden = true;
+  cancelAnimationFrame(rafId);
+  state.running = false;
+  document.getElementById("rec").hidden = true;
+  document.getElementById("idle").hidden = false;
+  document.getElementById("idleMsg").textContent = "Camera off. Press Start counting when you're back in frame.";
+  document.getElementById("startBtn").textContent = "Start counting";
+  persist(); render();
+}
+function loop(){
+  rafId = requestAnimationFrame(loop);
+  if(!state.running || video.readyState < 2) return;
+  const now = performance.now();
+  if(sampleFrame(video, now)) addRep(1);
+  drawTrace();
+  const el = Math.floor((Date.now()-state.t0)/1000);
+  if(el !== state.sec){ state.sec = el; document.getElementById("elapsed").textContent = fmt(el); }
+  const recEl = document.getElementById("rec");
+  recEl.lastChild.textContent = (now - lastMotion > 4500) ? " No movement" : " Counting";
+}
+
+/* ---------- reps ---------- */
+function addRep(n){
+  const s = cur();
+  const next = Math.max(0, Math.min(s.t, at(s.k) + n));
+  if(next === at(s.k)) return;
+  state.counts[s.k] = next;
+  if(n > 0) dbg.reps++;
+  if(n > 0) beep(next >= s.t ? 660 : 880, next >= s.t ? 0.12 : 0.05, 0.08);
+  renderCount(); renderRail(); renderProgress();
+  if(next >= s.t){
+    beep(1180, 0.18, 0.1);
+    if(state.idx < STATIONS.length-1){ setTimeout(()=>{ goStation(state.idx+1); }, 700); }
+    else finish();
+  }
+  persist();
+}
+function goStation(i){
+  state.idx = Math.max(0, Math.min(STATIONS.length-1, i));
+  armed = false; lastRep = performance.now();
+  render();
+}
+function finish(){
+  const r = slotRec(today, state.slot, true);
+  r.done = true; r.sec = state.sec; r.counts = Object.assign({}, state.counts);
+  save();
+  stopCam();
+  setBanner("Circuit complete — " + TOTAL + " reps in " + fmt(state.sec) + ". Streak is now " + streak() + " days.", "done");
+  beep(880,0.12,0.1); setTimeout(()=>beep(1320,0.22,0.1), 140);
+}
+function persist(){
+  const r = slotRec(today, state.slot, true);
+  r.counts = Object.assign({}, state.counts);
+  r.sec = state.sec;
+  r.done = allDone(state.counts);
+  save();
+}
+
+/* ---------- streaks + stats ---------- */
+function dayComplete(key){
+  const d = store.days[key];
+  return !!(d && ((d.am && d.am.done) || (d.pm && d.pm.done)));
+}
+function streak(){
+  let n = 0; const d = new Date();
+  if(!dayComplete(dayKey(d))) d.setDate(d.getDate()-1);
+  while(dayComplete(dayKey(d))){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+function bestStreak(){
+  const keys = Object.keys(store.days).filter(dayComplete).sort();
+  let best = 0, run = 0, prev = null;
+  for(const k of keys){
+    const d = new Date(k+"T00:00:00");
+    run = (prev && (d - prev) === 86400000) ? run+1 : 1;
+    prev = d; if(run > best) best = run;
+  }
+  return best;
+}
+function dayReps(key){
+  const d = store.days[key]; if(!d) return 0;
+  let n = 0;
+  for(const slot of ["am","pm"]){
+    const r = d[slot]; if(!r || !r.counts) continue;
+    for(const s of STATIONS) n += Math.min(r.counts[s.k]||0, s.t);
+  }
+  return n;
+}
+
+/* ---------- render ---------- */
+const fmt = s => String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+function setBanner(text, kind){
+  const b = document.getElementById("banner");
+  b.className = "banner" + (kind ? " " + kind : "");
+  document.getElementById("bannerText").textContent = text;
+}
+function renderCount(){
+  const s = cur();
+  document.getElementById("count").textContent = at(s.k);
+  document.getElementById("countSub").textContent = "of " + s.t + " " + s.n.toLowerCase();
+}
+function renderRail(){
+  const host = document.getElementById("stations");
+  host.innerHTML = "";
+  STATIONS.forEach((s,i)=>{
+    const c = at(s.k), done = c >= s.t;
+    const b = document.createElement("button");
+    b.className = "station"; b.type = "button";
+    b.setAttribute("aria-current", i === state.idx ? "true" : "false");
+    b.dataset.done = done ? "true" : "false";
+    b.innerHTML =
+      '<span class="num">'+String(i+1).padStart(2,"0")+'</span>'+
+      '<span><span class="nm">'+s.n+'</span><span class="cue">'+s.cue+'</span></span>'+
+      '<span class="ct">'+c+' / '+s.t+'</span>'+
+      '<span class="bar"><i style="width:'+Math.round(Math.min(1,c/s.t)*100)+'%"></i></span>';
+    b.addEventListener("click", ()=>goStation(i));
+    host.appendChild(b);
+  });
+}
+function renderProgress(){
+  const reps = doneReps(), frac = reps/TOTAL;
+  document.getElementById("pct").textContent = Math.round(frac*100)+"%";
+  document.getElementById("repsSub").textContent = reps + " of " + TOTAL + " reps";
+  document.getElementById("arc").setAttribute("stroke-dashoffset", String(138.2*(1-frac)));
+  document.getElementById("arc").setAttribute("stroke", frac >= 1 ? "var(--good)" : "var(--blue)");
+}
+function renderHistory(){
+  const host = document.getElementById("history");
+  host.innerHTML = "";
+  const d = new Date(); d.setDate(d.getDate()-34);
+  for(let i=0;i<35;i++){
+    const k = dayKey(d);
+    const reps = dayReps(k), frac = Math.min(1, reps/TOTAL);
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.dataset.full = dayComplete(k) ? "true" : "false";
+    cell.dataset.today = (k === today) ? "true" : "false";
+    cell.title = k + " — " + reps + " reps" + (dayComplete(k) ? " (circuit done)" : "");
+    cell.innerHTML = '<i style="height:'+Math.round(frac*100)+'%"></i>';
+    host.appendChild(cell);
+    d.setDate(d.getDate()+1);
+  }
+  const keys = Object.keys(store.days);
+  document.getElementById("streakNum").textContent = streak();
+  document.getElementById("sBest").textContent = bestStreak();
+  document.getElementById("sDays").textContent = keys.filter(dayComplete).length;
+  document.getElementById("sReps").textContent = keys.reduce((a,k)=>a+dayReps(k), 0);
+  const times = keys.map(k=>store.days[k]).flatMap(d=>["am","pm"].map(s=>d[s]).filter(r=>r&&r.done&&r.sec)).map(r=>r.sec).sort((a,b)=>a-b);
+  document.getElementById("sAvg").textContent = times.length ? fmt(times[Math.floor(times.length/2)]) : "—";
+}
+function renderBanner(){
+  const r = slotRec(today, state.slot, false);
+  if(r && r.done){
+    setBanner((state.slot === "am" ? "Morning" : "Evening") + " circuit done today in " + fmt(r.sec) + ". Streak: " + streak() + " days.", "done");
+    return;
+  }
+  const reps = doneReps();
+  const label = state.slot === "am" ? "morning" : "evening";
+  setBanner(reps
+    ? "Mid-circuit: " + reps + " of " + TOTAL + " reps. Next up is " + cur().n.toLowerCase() + ", " + (cur().t - at(cur().k)) + " to go."
+    : "Today's " + label + " circuit hasn't started. Station 1 is " + STATIONS[0].t + " hops.", null);
+}
+function render(){ renderCount(); renderRail(); renderProgress(); renderHistory(); renderBanner(); document.getElementById("elapsed").textContent = fmt(state.sec); }
+
+/* ---------- controls ---------- */
+function showDiag(on){
+  const d = document.getElementById("diag");
+  d.hidden = (on === false) ? true : (on === true ? false : !d.hidden);
+}
+document.getElementById("diagBtn").addEventListener("click", ()=>showDiag());
+setInterval(()=>{
+  const d = document.getElementById("diag");
+  if(d.hidden) return;
+  const v = document.getElementById("cam");
+  const secs = dbg.started ? (Date.now()-dbg.started)/1000 : 0;
+  d.textContent = [
+    "getUserMedia  " + dbg.gum,
+    "error         " + dbg.err,
+    "video         readyState=" + v.readyState + " " + v.videoWidth + "x" + v.videoHeight + " paused=" + v.paused + " hidden=" + v.hidden,
+    "frames        " + dbg.frames + (secs > 0.5 ? "  (" + (dbg.frames/secs).toFixed(1) + "/s)" : ""),
+    "motion        energy=" + dbg.energy.toFixed(5) + "  band=" + dbg.band.toFixed(5),
+    "threshold     " + dbg.thr.toFixed(5) + "  sens=" + store.prefs.sens,
+    "reps counted  " + dbg.reps + "   station=" + cur().n,
+    "page          " + (window.self !== window.top ? "embedded" : "top-level") + "  secure=" + window.isSecureContext
+  ].join("\n");
+}, 250);
+document.getElementById("startBtn").addEventListener("click", ()=> state.running ? stopCam() : startCam());
+document.getElementById("tapBtn").addEventListener("click", ()=>{
+  if(!state.t0) state.t0 = Date.now() - state.sec*1000;
+  addRep(1);
+});
+document.getElementById("minusBtn").addEventListener("click", ()=>addRep(-1));
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  state.counts[cur().k] = 0; persist(); render();
+});
+document.getElementById("nextBtn").addEventListener("click", ()=>goStation(state.idx+1));
+const sens = document.getElementById("sens"), sensVal = document.getElementById("sensVal");
+sens.value = store.prefs.sens;
+sensVal.textContent = Number(store.prefs.sens).toFixed(1) + " ×";
+sens.addEventListener("input", ()=>{
+  store.prefs.sens = Number(sens.value);
+  sensVal.textContent = store.prefs.sens.toFixed(1) + " ×"; save();
+});
+const sound = document.getElementById("sound");
+sound.checked = store.prefs.sound !== false;
+sound.addEventListener("change", ()=>{ store.prefs.sound = sound.checked; save(); });
+document.getElementById("slotAm").addEventListener("click", ()=>switchSlot("am"));
+document.getElementById("slotPm").addEventListener("click", ()=>switchSlot("pm"));
+function switchSlot(slot){
+  if(state.slot === slot) return;
+  persist();
+  state.slot = slot;
+  document.getElementById("slotAm").setAttribute("aria-pressed", String(slot === "am"));
+  document.getElementById("slotPm").setAttribute("aria-pressed", String(slot === "pm"));
+  const r = slotRec(today, slot, false);
+  state.counts = r ? Object.assign({}, r.counts) : {};
+  state.sec = r ? (r.sec||0) : 0;
+  state.t0 = Date.now() - state.sec*1000;
+  const first = STATIONS.findIndex(s => (state.counts[s.k]||0) < s.t);
+  state.idx = first < 0 ? STATIONS.length-1 : first;
+  render();
+}
+document.addEventListener("keydown", e=>{
+  if(e.target.matches("input, button")) return;
+  if(e.code === "Space"){ e.preventDefault(); addRep(1); }
+  if(e.code === "ArrowRight") goStation(state.idx+1);
+  if(e.code === "ArrowLeft") goStation(state.idx-1);
+});
+document.getElementById("backupBtn").addEventListener("click", async ()=>{
+  const btn = document.getElementById("backupBtn");
+  try{ await navigator.clipboard.writeText(JSON.stringify(store)); btn.textContent = "Copied"; }
+  catch(e){ btn.textContent = "Copy blocked"; }
+  setTimeout(()=>{ btn.textContent = "Copy backup"; }, 1800);
+});
+
+/* ---------- reminder (local, page-open) ---------- */
+const remTime = document.getElementById("remTime"), remOn = document.getElementById("remOn");
+remTime.value = store.prefs.reminder || "06:45";
+remOn.checked = !!store.prefs.reminderOn;
+let firedFor = null;
+function nextRemind(){
+  const [h,m] = (store.prefs.reminder||"06:45").split(":").map(Number);
+  const n = new Date(); const t = new Date();
+  t.setHours(h, m, 0, 0);
+  if(t <= n) t.setDate(t.getDate()+1);
+  return t;
+}
+function updateRemind(){
+  store.prefs.reminder = remTime.value;
+  store.prefs.reminderOn = remOn.checked;
+  save();
+  const el = document.getElementById("remNext");
+  if(!remOn.checked){ el.textContent = "off"; return; }
+  const t = nextRemind(), mins = Math.round((t - new Date())/60000);
+  el.textContent = (mins < 60 ? mins + " min" : Math.floor(mins/60) + " h " + (mins%60) + " min");
+  if(remOn.checked && "Notification" in window && Notification.permission === "default"){
+    Notification.requestPermission().then(p=>{ document.getElementById("remPerm").textContent = p === "granted" ? "allowed" : "in-page only"; }).catch(()=>{});
+  }
+}
+remTime.addEventListener("change", updateRemind);
+remOn.addEventListener("change", updateRemind);
+setInterval(()=>{
+  if(remOn.checked) updateRemind();
+  const now = new Date(), stamp = dayKey(now) + " " + store.prefs.reminder;
+  const [h,m] = (store.prefs.reminder||"06:45").split(":").map(Number);
+  if(remOn.checked && now.getHours() === h && now.getMinutes() === m && firedFor !== stamp){
+    firedFor = stamp;
+    if(!dayComplete(dayKey(now))){
+      setBanner("Reminder — morning circuit: " + TOTAL + " reps, seven stations. Station 1 is 100 hops.", "warn");
+      beep(740,0.2,0.12); setTimeout(()=>beep(988,0.3,0.12), 240);
+      try{ if("Notification" in window && Notification.permission === "granted") new Notification("Morning Circuit", {body:"275 reps, seven stations. Start with 100 hops."}); }catch(e){}
+    }
+  }
+}, 20000);
+try{ if("Notification" in window && Notification.permission === "granted") document.getElementById("remPerm").textContent = "allowed"; }catch(e){}
+if(!storageOk) document.getElementById("storeState").textContent = "unavailable";
+
+render();
+updateRemind();
+drawTrace();
+preflight();
+</script>
+
+</body>
+</html>
