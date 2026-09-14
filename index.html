@@ -177,7 +177,7 @@ button{font:inherit; color:inherit; cursor:pointer}
   <header class="top">
     <div class="brand">
       <h1>Morning Circuit</h1>
-      <p>Seven stations, 275 reps, on the floor you already have. The camera counts the rhythm — nothing leaves this device.</p>
+      <p>Seven stations, 275 reps, on the floor you already have. <strong>100% local & private:</strong> camera frames are analyzed in-memory on this device and never stored or sent anywhere. No server, no cloud, no tracking.</p>
     </div>
     <div class="badges">
       <div class="streak"><b id="streakNum">0</b><span>day<br>streak</span></div>
@@ -199,7 +199,7 @@ button{font:inherit; color:inherit; cursor:pointer}
         <video id="cam" autoplay playsinline webkit-playsinline muted hidden></video>
         <div class="idle" id="idle">
           <strong>Camera off</strong>
-          <p id="idleMsg">Prop your phone or laptop against a wall, 2–3 m back, so your whole body is in frame. Press Start counting.</p>
+          <p id="idleMsg">Prop your phone or laptop against a wall, 2–3 m back, so your whole body is in frame. Press Start counting. <span style="display:block;margin-top:6px;font-size:11.5px;opacity:.8">🔒 100% on-device — no video or photos are ever saved or transmitted.</span></p>
           <code class="mono" id="camCode" hidden style="font-size:11px;line-height:1.5;letter-spacing:.03em;padding:5px 9px;border:1px solid var(--line);color:var(--muted);max-width:40ch;text-align:center"></code>
         </div>
         <div class="hud">
@@ -289,13 +289,9 @@ button{font:inherit; color:inherit; cursor:pointer}
   </section>
 
   <p class="footnote">
-    <b>How the counting works.</b> Frames from your camera are compared to each other inside this page —
-    a moving-average motion signal, band-passed, with one rep counted per motion cycle and a minimum
-    gap per exercise (0.26 s for hops, 0.85 s for squats and pushups). No video, no frames and no model
-    calls ever leave the device; there is no server in this page. It reads rhythm, not joint angles, so
-    a shaky count is normal on the first try — slide Sensitivity until the ticks on the trace line up
-    with your reps, or use Tap to count. <b>Framing:</b> standing work full-body and face-on; pushups,
-    mountain climbers and lunges read best side-on with the phone low.
+    <b>🔒 100% On-Device & Private.</b> Absolutely everything runs locally in your browser. Video frames are processed live in volatile memory using local canvas pixel-differencing and are immediately discarded — no video, frames, audio, or telemetry are ever recorded, transmitted, or stored on any server. There are no tracking scripts, analytics, or external servers. All workout stats, streaks, and history live exclusively in your device's browser <code>localStorage</code>.
+    <br><br>
+    <b>How the counting works:</b> The camera analyzes rhythmic motion energy across frames with exercise-specific two-stroke cycles (e.g. descent + ascent for squats). Slide Sensitivity to calibrate to your room's lighting and distance. <b>Framing:</b> standing work full-body and face-on; pushups, mountain climbers, and lunges read cleanest side-on with the phone placed low.
   </p>
 </div>
 

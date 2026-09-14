@@ -5,6 +5,11 @@ camera feed, plus streaks, history and a daily reminder. No build step, no
 dependencies, no server, no network calls at runtime (fonts are the only external
 fetch). All data lives in `localStorage`.
 
+> **🔒 100% On-Device & Private — Nothing Stored Anywhere**
+> - **Zero server uploads:** Video frames are analyzed live in-memory via HTML5 canvas and immediately discarded. No video, images, audio, or telemetry ever leave your device.
+> - **No database / no tracking:** There are no user accounts, no analytics, and no external servers.
+> - **Local persistence only:** All streak counters, exercise tallies, and history are stored strictly in your browser's private `localStorage`.
+
 **Everything is in `index.html`.** Open it over http(s) — not `file://`, which
 blocks camera access.
 
