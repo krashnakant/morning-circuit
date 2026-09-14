@@ -41,6 +41,14 @@ separately on the same day.
 - **Gym-mode Fullscreen (`F` or `⛶`):** Enlarges the viewfinder to 100vw/100vh with high-visibility tally numbers (`clamp(80px, 14vw, 140px)`), current station badge, and tap-anywhere counting support when propped against a wall.
 - **Haptic feedback:** Tactile vibrations on rep completion and station completion on supported mobile devices (`navigator.vibrate`).
 - **100% on-device privacy:** Absolutely no frames, images, audio, or telemetry leave the device; all processing occurs in volatile memory and is instantly discarded. All stats and streaks live in local storage.
+- **Installable PWA & 100% Offline:** Can be installed locally on phones (iOS & Android) and PCs/Macs as a standalone native app via Service Worker and Web App Manifest (`manifest.webmanifest`).
+
+## Installing locally as a PWA (Phone or PC)
+
+- **iPhone / iPad (Safari):** Tap the **Share** button (📤) → scroll down and tap **Add to Home Screen** (➕) → tap **Add**. It launches full-screen without browser bars.
+- **Android (Chrome):** Tap the **⬇ Install** button in the app header, or tap Chrome menu (⋮) → **Install app**.
+- **Mac / PC (Chrome / Edge):** Click the **⬇ Install** button in the header, or the install icon in the address bar to install it to your Applications folder / Start menu.
+- **Mac (Safari on macOS Sonoma+):** Click **File** → **Add to Dock...** to install it as a standalone macOS desktop app with its own icon in your Dock and Launchpad.
 
 ## Reading the diagnostics panel
 

@@ -7,7 +7,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0D0E12">
 <meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-title" content="Morning Circuit">
 <title>Morning Circuit</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;800&family=Public+Sans:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap">
 <style>:root{color-scheme:light dark}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
@@ -134,6 +139,11 @@ button{font:inherit; color:inherit; cursor:pointer; touch-action:manipulation; -
   width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;
   transition:all .15s ease}
 .btn-theme:hover{background:var(--sunk); transform:scale(1.05)}
+.btn-install{background:var(--blue-soft); border:1px solid var(--blue); color:var(--blue-ink);
+  border-radius:var(--radius-pill); padding:7px 13px; font-size:11.5px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.06em; display:inline-flex; align-items:center; gap:5px;
+  transition:all .15s ease}
+.btn-install:hover{background:var(--blue); color:#fff}
 
 /* ---------- banner ---------- */
 .banner{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
@@ -329,6 +339,9 @@ body.has-fs-open{overflow:hidden !important}
       <p>Seven stations, 275 reps, on the floor you already have. <strong>100% local & private:</strong> camera frames are analyzed in-memory on this device and never stored or sent anywhere. No server, no cloud, no tracking.</p>
     </div>
     <div class="badges">
+      <button id="pwaInstallBtn" class="btn-install" type="button" aria-label="Install App" title="Install Morning Circuit on this device" hidden>
+        ⬇ Install
+      </button>
       <button id="themeToggle" class="btn-theme" type="button" aria-label="Toggle dark/light theme" title="Toggle dark/light theme">
         <span id="themeIcon">🌓</span>
       </button>
@@ -1135,6 +1148,40 @@ if(finderEl){
     }
   });
 }
+
+/* ---------- PWA / Service Worker & Install Prompt ---------- */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  });
+}
+
+let deferredPrompt = null;
+const installBtn = document.getElementById("pwaInstallBtn");
+
+window.addEventListener("beforeinstallprompt", e=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  if(installBtn) installBtn.hidden = false;
+});
+
+if(installBtn){
+  installBtn.addEventListener("click", async ()=>{
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try{
+      const { outcome } = await deferredPrompt.userChoice;
+      if(outcome === "accepted"){
+        installBtn.hidden = true;
+      }
+    }catch(e){}
+    deferredPrompt = null;
+  });
+}
+
+window.addEventListener("appinstalled", ()=>{
+  if(installBtn) installBtn.hidden = true;
+});
 
 render();
 updateRemind();
