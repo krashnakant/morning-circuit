@@ -10,15 +10,15 @@ blocks camera access.
 
 ## The workout
 
-| # | Station | Target | Min gap between reps |
-|---|---------|--------|----------------------|
-| 1 | Hops (like jumping rope) | 100 | 0.38 s |
-| 2 | Arm swings (overhead and down) | 25 | 0.85 s |
-| 3 | Body squats | 25 | 1.25 s |
-| 4 | Pushups | 25 | 1.15 s |
-| 5 | Mountain climbers | 50 | 0.24 s |
-| 6 | Jumping jacks | 25 | 0.65 s |
-| 7 | Lunges | 25 | 1.20 s |
+| # | Station | Target | Strokes / rep | Min gap per stroke |
+|---|---------|--------|---------------|-------------------|
+| 1 | Hops (like jumping rope) | 100 | 1 (continuous) | 0.32 s |
+| 2 | Arm swings (overhead and down) | 25 | 2 (up + down) | 0.42 s |
+| 3 | Body squats | 25 | 2 (down + up) | 0.48 s |
+| 4 | Pushups | 25 | 2 (down + up) | 0.44 s |
+| 5 | Mountain climbers | 50 | 1 (per knee drive) | 0.22 s |
+| 6 | Jumping jacks | 25 | 2 (out + in) | 0.34 s |
+| 7 | Lunges | 25 | 2 (step + return) | 0.48 s |
 
 275 reps total. Morning is the tracked session; evening is optional and logged
 separately on the same day.

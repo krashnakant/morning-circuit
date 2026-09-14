@@ -206,7 +206,7 @@ button{font:inherit; color:inherit; cursor:pointer}
           <div class="hud-top">
             <div class="rec" id="rec" hidden><i></i> Counting</div>
             <div class="tally">
-              <b id="count">0</b>
+              <b id="count">0<i id="strokeDot" title="Half rep in progress" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--flame);margin-left:6px;vertical-align:middle;opacity:0;transition:opacity .15s"></i></b>
               <span id="countSub">of 100 hops</span>
             </div>
           </div>
@@ -302,13 +302,13 @@ button{font:inherit; color:inherit; cursor:pointer}
 <script>
 "use strict";
 const STATIONS = [
-  {k:"hops",   n:"Hops",              t:100, gap:0.38, cue:"Like jumping rope, no rope. Face-on, full body in frame."},
-  {k:"swings", n:"Arm swings",        t:25,  gap:0.85, cue:"Both arms overhead and back down. Stand back so hands stay in frame."},
-  {k:"squats", n:"Body squats",       t:25,  gap:1.25, cue:"Feet shoulder-width, heels down. Side-on reads cleanest."},
-  {k:"push",   n:"Pushups",           t:25,  gap:1.15, cue:"Phone on the floor, side-on, level with your shoulders."},
-  {k:"climb",  n:"Mountain climbers", t:50,  gap:0.24, cue:"Count one per knee drive. Phone low and side-on."},
-  {k:"jacks",  n:"Jumping jacks",     t:25,  gap:0.65, cue:"Arms and legs together. Full body, face-on."},
-  {k:"lunge",  n:"Lunges",            t:25,  gap:1.20, cue:"Alternate legs, one count per step. Side-on."}
+  {k:"hops",   n:"Hops",              t:100, strokes:1, gap:0.32, cue:"Like jumping rope, no rope. Face-on, full body in frame."},
+  {k:"swings", n:"Arm swings",        t:25,  strokes:2, gap:0.42, cue:"Both arms overhead and back down. Stand back so hands stay in frame."},
+  {k:"squats", n:"Body squats",       t:25,  strokes:2, gap:0.48, cue:"Feet shoulder-width, heels down. Side-on reads cleanest."},
+  {k:"push",   n:"Pushups",           t:25,  strokes:2, gap:0.44, cue:"Phone on the floor, side-on, level with your shoulders."},
+  {k:"climb",  n:"Mountain climbers", t:50,  strokes:1, gap:0.22, cue:"Count one per knee drive. Phone low and side-on."},
+  {k:"jacks",  n:"Jumping jacks",     t:25,  strokes:2, gap:0.34, cue:"Arms and legs together. Full body, face-on."},
+  {k:"lunge",  n:"Lunges",            t:25,  strokes:2, gap:0.48, cue:"Alternate legs, one count per step. Side-on."}
 ];
 const TOTAL = STATIONS.reduce((a,s)=>a+s.t,0);
 const KEY = "morning-circuit.v1";
@@ -370,8 +370,14 @@ work.width = CW; work.height = CH;
 const wctx = work.getContext("2d", {willReadFrequently:true});
 const dbg = {gum:"not called", frames:0, energy:0, band:0, thr:0, reps:0, err:"none", started:0};
 let prevGray = null, fast = 0, slow = 0, noise = 0.004, armed = false, lastRep = 0, lastMotion = 0;
+let strokeCount = 0, lastStroke = 0;
 const traceBuf = new Array(180).fill(0);
 const tickBuf  = new Array(180).fill(0);
+
+function updateStrokeIndicator(active){
+  const el = document.getElementById("strokeDot");
+  if(el) el.style.opacity = active ? "1" : "0";
+}
 
 function sampleFrame(video, now){
   wctx.drawImage(video, 0, 0, CW, CH);
@@ -394,15 +400,35 @@ function sampleFrame(video, now){
   const moving = slow > 0.0018;
   if(moving) lastMotion = now;
 
-  let fired = false;
-  if(!armed && band < -thr * 0.45) armed = true;
-  if(armed && moving && band > thr && (now - lastRep) > cur().gap * 1000){
-    armed = false; lastRep = now; fired = true;
+  // Reset abandoned half-stroke after 3.5s of stillness
+  if(strokeCount > 0 && (now - lastStroke) > 3500){
+    strokeCount = 0;
+    updateStrokeIndicator(false);
+  }
+
+  let tickVal = 0;
+  if(!armed && band < -thr * 0.40) armed = true;
+  if(armed && moving && band > thr && (now - lastStroke) > cur().gap * 1000){
+    armed = false;
+    lastStroke = now;
+    const needed = cur().strokes || 1;
+    strokeCount++;
+    if(strokeCount >= needed){
+      strokeCount = 0;
+      lastRep = now;
+      addRep(1);
+      tickVal = 1;
+      updateStrokeIndicator(false);
+    } else {
+      tickVal = 0.5;
+      beep(520, 0.02, 0.03); // Subtle half-rep audio feedback
+      updateStrokeIndicator(true);
+    }
   }
   dbg.frames++; dbg.energy = energy; dbg.band = band; dbg.thr = thr;
   traceBuf.push(band / (thr * 2.2)); traceBuf.shift();
-  tickBuf.push(fired ? 1 : 0); tickBuf.shift();
-  return fired;
+  tickBuf.push(tickVal); tickBuf.shift();
+  return tickVal === 1;
 }
 
 /* ---------- trace strip ---------- */
@@ -422,11 +448,16 @@ function drawTrace(){
     i ? tctx.lineTo(x,y) : tctx.moveTo(x,y);
   }
   tctx.stroke();
-  tctx.fillStyle = "#fff";
   for(let i=0;i<tickBuf.length;i++){
     if(!tickBuf[i]) continue;
     const x = i/(tickBuf.length-1)*w;
-    tctx.fillRect(x-1.5, 0, 3, 9);
+    if(tickBuf[i] >= 1){
+      tctx.fillStyle = "#fff";
+      tctx.fillRect(x-1.5, 0, 3, 11);
+    } else {
+      tctx.fillStyle = "rgba(255,255,255,0.45)";
+      tctx.fillRect(x-1, 0, 2, 6);
+    }
   }
 }
 
@@ -523,6 +554,8 @@ function stopCam(){
   video.hidden = true;
   cancelAnimationFrame(rafId);
   state.running = false;
+  strokeCount = 0;
+  updateStrokeIndicator(false);
   document.getElementById("rec").hidden = true;
   document.getElementById("idle").hidden = false;
   document.getElementById("idleMsg").textContent = "Camera off. Press Start counting when you're back in frame.";
@@ -559,7 +592,9 @@ function addRep(n){
 }
 function goStation(i){
   state.idx = Math.max(0, Math.min(STATIONS.length-1, i));
-  armed = false; lastRep = performance.now();
+  armed = false; lastRep = performance.now(); lastStroke = performance.now();
+  strokeCount = 0;
+  updateStrokeIndicator(false);
   render();
 }
 function finish(){
@@ -702,7 +737,7 @@ setInterval(()=>{
     "frames        " + dbg.frames + (secs > 0.5 ? "  (" + (dbg.frames/secs).toFixed(1) + "/s)" : ""),
     "motion        energy=" + dbg.energy.toFixed(5) + "  band=" + dbg.band.toFixed(5),
     "threshold     " + dbg.thr.toFixed(5) + "  sens=" + store.prefs.sens,
-    "reps counted  " + dbg.reps + "   station=" + cur().n,
+    "reps counted  " + dbg.reps + "   station=" + cur().n + " (" + (strokeCount ? "half-rep" : "ready") + " " + strokeCount + "/" + (cur().strokes||1) + ")",
     "page          " + (window.self !== window.top ? "embedded" : "top-level") + "  secure=" + window.isSecureContext
   ].join("\n");
 }, 250);
