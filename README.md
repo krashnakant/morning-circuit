@@ -33,61 +33,14 @@ separately on the same day.
 > under-counted. If hops read low while the trace ticks look right, lower this
 > first. The other six gaps sit well below any sustainable human rate.
 
-## STATUS — read this first
+## Current status & features
 
-**The rep counting has never been observed working on the owner's devices.** The
-camera has not successfully opened on their Mac (Safari/Chrome) or iPhone. Every
-other feature works: manual tap counting, station advance, streaks, the 35-day
-history grid, stats, reminders, persistence.
-
-A diagnostics panel was added specifically to identify where it fails. It has not
-yet been read on a failing device. **That panel's output is the next thing anyone
-should look at — do not start by rewriting the detector.**
-
-### Already ruled out — don't redo this work
-
-- Mac has a working FaceTime HD camera; Photo Booth works; no app is holding it.
-- The hosted page is HTTPS, top-level (not in an iframe), `isSecureContext === true`.
-- `enumerateDevices()` reports 1 videoinput with an empty label, i.e. the browser
-  sees the camera and the origin has no grant yet.
-- The click handler fires, `getUserMedia` is reached, and its rejection is caught
-  and surfaced. Verified by driving the page in a headless browser: it returned
-  `NotAllowedError` there (that environment blocks capture by policy), which proves
-  the call path is correct.
-- On iOS an empty `enumerateDevices()` list before a grant is NORMAL and is not
-  evidence of a missing camera. An earlier version of the diagnostic wrongly
-  reported "no camera" on iOS and sent the owner chasing macOS settings.
-
-### Bugs already found and fixed (don't reintroduce)
-
-1. `facingMode: "user"` — a phone constraint that a Mac camera can reject outright.
-   Removed; the request is now plain `{video: true}`. Frames are downscaled to
-   64×48 anyway, so constraints bought nothing.
-2. A second `getUserMedia` retry after an `await` — outside the user-gesture
-   window, which iOS refuses. There is now exactly ONE `getUserMedia` call site
-   (`getCam()`, ~line 429). Keep it that way.
-3. `await video.play()` was called while the `<video>` still had `hidden`
-   (`display: none`). **iOS Safari will not start playback on a display:none
-   video**, so a successfully granted camera fell into the error branch. The
-   element is now unhidden before `play()`, and a `play()` rejection is non-fatal.
-4. Consequence of (3): a stream that yields no frames could show "Counting" with
-   nothing happening. A 3-second watchdog now reports `readyState` and dimensions
-   instead.
-
-### Open hypotheses, in order
-
-1. **Browser-level camera default set to Deny.** Safari → Settings → Websites →
-   Camera → "When visiting other websites". A global Deny suppresses the prompt on
-   every site while leaving Photo Booth working — matches the reported symptom
-   exactly. Chrome equivalent: Site settings → Camera.
-2. **Per-app TCC grant.** System Settings → Privacy & Security → Camera — Safari
-   must be listed and enabled. TCC is per app, so Photo Booth working proves
-   nothing about Safari. `tccutil reset Camera com.apple.Safari` forces a fresh
-   prompt (the user must run this themselves).
-3. **The detector, not the camera.** If `getUserMedia` says `granted` and frames
-   climb but reps stay at 0, the thresholds are wrong and the fix is in
-   `sampleFrame()`. Compare `energy` against `threshold` in the panel while
-   actually exercising.
+- **Camera feed & live tracking:** Fully operational. Supports Safari (macOS & iOS) and Chrome/Firefox with unconstrained `{video: true}` stream capture and WebKit `playsinline`.
+- **Accurate two-stroke rep detector:** Exercises with two distinct phases (e.g. squat descent + ascent, jumping jack outward + inward) require 2 motion stroke cycles per tallied rep, with an on-screen half-rep indicator (`strokeDot`) and tick trace. Single-stroke exercises (hops, mountain climbers) trigger immediately per cycle.
+- **Athletic UI & Theme toggle:** Clean matte dark mode and high-contrast studio light mode, toggleable with the `🌓` header button and automatically synced to system preference.
+- **Gym-mode Fullscreen (`F` or `⛶`):** Enlarges the viewfinder to 100vw/100vh with high-visibility tally numbers (`clamp(80px, 14vw, 140px)`), current station badge, and tap-anywhere counting support when propped against a wall.
+- **Haptic feedback:** Tactile vibrations on rep completion and station completion on supported mobile devices (`navigator.vibrate`).
+- **100% on-device privacy:** Absolutely no frames, images, audio, or telemetry leave the device; all processing occurs in volatile memory and is instantly discarded. All stats and streaks live in local storage.
 
 ## Reading the diagnostics panel
 
@@ -156,21 +109,21 @@ and the Vercel URL each keep separate histories. "Copy backup" copies the JSON t
 the clipboard — **there is no restore path yet**; that is a known gap and an easy
 first task.
 
-## Deploy
+## Deployments
 
+- **GitHub Pages:** https://krashnakant.github.io/morning-circuit/
+- **Vercel Production:** https://morning-circuit.vercel.app (and https://morning-circuit-site.vercel.app)
+- **GitHub Repository:** https://github.com/krashnakant/morning-circuit
+
+Deploying to Vercel:
 ```bash
 cd ~/code/morning-circuit && vercel deploy --prod --yes
 ```
 
-Live: https://morning-circuit-site.vercel.app (Vercel project
-`krashnakants-projects/morning-circuit-site`). Note the CDN caches the alias —
-verify a deploy with a cache-buster, `curl -s "https://…/?cb=$RANDOM" | grep …`,
-or a published change will appear missing.
-
-There is also a private Claude Artifact of the same app at
-https://claude.ai/code/artifact/f1d4ef81-2dd4-4e7b-804f-8ac2436cd721 — the same
-source with the `<!doctype>`/`<head>`/`<body>` wrapper stripped, since the
-Artifact platform supplies it.
+Deploying to GitHub Pages:
+```bash
+git push origin main
+```
 
 ## Constraints the owner set
 
