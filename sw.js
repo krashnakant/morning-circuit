@@ -1,4 +1,4 @@
-const CACHE_NAME = "morning-circuit-v1";
+const CACHE_NAME = "morning-circuit-v2";
 const PRECACHE_URLS = [
   "./",
   "./index.html",

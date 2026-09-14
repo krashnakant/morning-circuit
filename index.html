@@ -170,6 +170,18 @@ body.has-fs-open{overflow:hidden !important}
 .finder video{width:100%; height:100%; object-fit:cover; transform:scaleX(-1); display:block; background:var(--sunk)}
 .finder .idle{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:12px; text-align:center; padding:24px; color:var(--muted); background:radial-gradient(circle at 50% 45%, var(--sunk), var(--panel));}
+.idle-pulse{position:relative; width:64px; height:64px; display:flex; align-items:center; justify-content:center; margin-bottom:2px}
+.idle-ring{position:absolute; inset:0; border-radius:50%; border:2px solid var(--blue); opacity:.4; animation:radarPulse 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite}
+.idle-ring.ring-2{animation-delay:1.1s}
+@keyframes radarPulse{
+  0%{transform:scale(0.5); opacity:0.8}
+  100%{transform:scale(1.5); opacity:0}
+}
+.idle-icon{font-size:26px; z-index:1; animation:iconFloat 2s ease-in-out infinite alternate}
+@keyframes iconFloat{
+  0%{transform:translateY(0) scale(0.96)}
+  100%{transform:translateY(-3px) scale(1.08)}
+}
 .finder .idle strong{font-family:var(--display); font-size:22px; font-weight:700; color:var(--ink); letter-spacing:.02em}
 .finder .idle p{margin:0; font-size:13.5px; max-width:38ch; line-height:1.45}
 .hud{position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between}
@@ -193,6 +205,10 @@ body.has-fs-open{overflow:hidden !important}
 .hud-station{display:inline-flex; align-items:center; gap:8px; background:rgba(10,10,14,.68); color:#fff;
   padding:6px 13px; border-radius:var(--radius-pill); border:1px solid rgba(255,255,255,.18);
   backdrop-filter:blur(6px); font-family:var(--display); letter-spacing:.03em; box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.hud-station .hud-icon{display:inline-flex; align-items:center; justify-content:center;
+  color:var(--flame); animation:exerciseBounce 1.4s ease-in-out infinite alternate}
+.hud-station .hud-icon svg{width:16px; height:16px; display:block}
+.finder:fullscreen .hud-station .hud-icon svg, .finder.is-fullscreen .hud-station .hud-icon svg{width:22px; height:22px}
 .hud-station span{font-family:var(--mono); font-size:11.5px; opacity:.75; font-weight:600}
 .hud-station b{font-size:16px; text-transform:uppercase; font-weight:700}
 .finder:fullscreen .hud-station b, .finder:-webkit-full-screen .hud-station b, .finder.is-fullscreen .hud-station b{font-size:22px}
@@ -201,6 +217,16 @@ body.has-fs-open{overflow:hidden !important}
   border-radius:var(--radius-sm); border:1px solid rgba(255,255,255,.15); box-shadow:0 4px 12px rgba(0,0,0,.3)}
 .tally b{font-family:var(--display); font-weight:800; font-size:clamp(48px,8.5vw,78px); line-height:.88; display:block;
   font-variant-numeric:tabular-nums; letter-spacing:-.01em}
+@keyframes repPop{
+  0%{transform:scale(1.25); color:var(--flame); text-shadow:0 0 16px rgba(249,87,56,0.7)}
+  50%{transform:scale(1.1); color:var(--flame)}
+  100%{transform:scale(1); color:inherit; text-shadow:none}
+}
+.rep-pop{animation:repPop .35s cubic-bezier(0.18, 0.89, 0.32, 1.28)}
+@keyframes exerciseBounce{
+  0%{transform:scale(1) translateY(0)}
+  100%{transform:scale(1.15) translateY(-2px)}
+}
 .finder:fullscreen .tally b, .finder:-webkit-full-screen .tally b, .finder.is-fullscreen .tally b{font-size:clamp(72px,14vw,140px)}
 .tally span{font-family:var(--mono); font-size:11.5px; opacity:.85; letter-spacing:.04em; text-transform:uppercase}
 #strokeDot{display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--flame);
@@ -240,19 +266,24 @@ body.has-fs-open{overflow:hidden !important}
   border-bottom:1px solid var(--line-soft); background:var(--panel)}
 .rail-head h2{font-size:17px; text-transform:uppercase; letter-spacing:.04em}
 .rail-head .mono{font-size:12.5px; color:var(--muted); font-weight:600}
-.station{display:grid; grid-template-columns:26px 1fr auto; gap:11px; align-items:center; width:100%;
+.station{display:grid; grid-template-columns:22px 28px 1fr auto; gap:10px; align-items:center; width:100%;
   padding:12px 16px; background:none; border:0; border-bottom:1px solid var(--line-soft); text-align:left;
   border-left:3px solid transparent; transition:background .15s ease}
 .station:hover{background:var(--sunk)}
 .station:last-child{border-bottom:0}
 .station .num{font-family:var(--mono); font-size:12px; color:var(--muted); font-weight:600}
+.station .station-icon{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px;
+  border-radius:6px; background:var(--sunk); color:var(--muted); transition:all .2s ease}
+.station .station-icon svg{width:18px; height:18px; display:block}
 .station .nm{font-family:var(--display); font-size:17px; font-weight:700; letter-spacing:.02em; line-height:1.1}
 .station .cue{font-size:11.5px; color:var(--muted); line-height:1.35; margin-top:2px}
 .station .ct{font-family:var(--mono); font-size:13.5px; color:var(--ink-2); font-weight:700; white-space:nowrap}
-.station .bar{grid-column:2/4; height:5px; background:var(--sunk); border-radius:var(--radius-pill); overflow:hidden}
+.station .bar{grid-column:2/5; height:5px; background:var(--sunk); border-radius:var(--radius-pill); overflow:hidden}
 .station .bar i{display:block; height:100%; background:var(--blue); border-radius:var(--radius-pill); transition:width .25s ease}
 .station[aria-current="true"]{border-left-color:var(--blue); background:var(--blue-soft)}
 .station[aria-current="true"] .nm{color:var(--blue-ink)}
+.station[aria-current="true"] .station-icon{background:var(--blue); color:#fff; box-shadow:0 0 10px rgba(37,99,235,0.4); animation:exerciseBounce 1.4s ease-in-out infinite alternate}
+.station[data-done="true"] .station-icon{background:var(--good-soft); color:var(--good)}
 .station[data-done="true"] .nm{color:var(--muted)}
 .station[data-done="true"] .ct{color:var(--good)}
 .station[data-done="true"] .bar i{background:var(--good)}
@@ -363,6 +394,11 @@ body.has-fs-open{overflow:hidden !important}
       <div class="finder">
         <video id="cam" autoplay playsinline webkit-playsinline muted hidden></video>
         <div class="idle" id="idle">
+          <div class="idle-pulse" aria-hidden="true">
+            <div class="idle-ring ring-1"></div>
+            <div class="idle-ring ring-2"></div>
+            <div class="idle-icon">⚡</div>
+          </div>
           <strong>Camera off</strong>
           <p id="idleMsg">Prop your phone or laptop against a wall, 2–3 m back, so your whole body is in frame. Press Start counting. <span style="display:block;margin-top:6px;font-size:11.5px;opacity:.8">🔒 100% on-device — no video or photos are ever saved or transmitted.</span></p>
           <code class="mono" id="camCode" hidden style="font-size:11px;line-height:1.5;letter-spacing:.03em;padding:5px 9px;border:1px solid var(--line);color:var(--muted);max-width:40ch;text-align:center"></code>
@@ -371,7 +407,7 @@ body.has-fs-open{overflow:hidden !important}
           <div class="hud-top">
             <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
               <div class="rec" id="rec" hidden><i></i> Counting</div>
-              <div class="hud-station" id="hudStation"><span id="hudStationNum">01</span> <b id="hudStationName">Hops</b></div>
+              <div class="hud-station" id="hudStation"><span class="hud-icon" id="hudStationIcon"></span><span id="hudStationNum">01</span> <b id="hudStationName">Hops</b></div>
             </div>
             <div class="hud-right">
               <button id="fsBtn" type="button" class="btn-fs" title="Toggle full screen (F)" aria-label="Full screen">⛶</button>
@@ -753,7 +789,15 @@ function addRep(n){
   const next = Math.max(0, Math.min(s.t, at(s.k) + n));
   if(next === at(s.k)) return;
   state.counts[s.k] = next;
-  if(n > 0) dbg.reps++;
+  if(n > 0){
+    dbg.reps++;
+    const countEl = document.getElementById("count");
+    if(countEl){
+      countEl.classList.remove("rep-pop");
+      void countEl.offsetWidth;
+      countEl.classList.add("rep-pop");
+    }
+  }
   if(n > 0 && "vibrate" in navigator) try{ navigator.vibrate(35); }catch(e){}
   if(n > 0) beep(next >= s.t ? 660 : 880, next >= s.t ? 0.12 : 0.05, 0.08);
   renderCount(); renderRail(); renderProgress();
@@ -826,14 +870,26 @@ function setBanner(text, kind){
   b.className = "banner" + (kind ? " " + kind : "");
   document.getElementById("bannerText").textContent = text;
 }
+const STATION_ICONS = {
+  hops: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v5l-3 4M12 12l3 4M9 10l3-1 3 1"/><path d="M6 21c2-1 4-1 6 0 2-1 4-1 6 0" stroke-dasharray="2 2"/></svg>',
+  swings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v8M10 22l2-7 2 7M6 6c3-3 9-3 12 0M5 12l7-2 7 2"/></svg>',
+  squats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v4l-4 4 2 6M12 11l4 4-2 6M8 9h8"/></svg>',
+  push: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="11" r="2"/><path d="M8 12l8 4 5 0M8 12l-2 5M12 14l-1 3M2 20h20"/></svg>',
+  climb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="10" r="2"/><path d="M8 12l6 3 6 4M12 14l-2 4-4-2M8 12l-3 7M2 21h20"/></svg>',
+  jacks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v6M6 7l6 2 6-2M7 21l5-9 5 9"/></svg>',
+  lunge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v5l5 2v5M12 12l-4 3v4M9 10l3-1 3 1"/></svg>'
+};
+
 function renderCount(){
   const s = cur();
   document.getElementById("count").textContent = at(s.k);
   document.getElementById("countSub").textContent = "of " + s.t + " " + s.n.toLowerCase();
   const hsNum = document.getElementById("hudStationNum");
   const hsName = document.getElementById("hudStationName");
+  const hsIcon = document.getElementById("hudStationIcon");
   if(hsNum) hsNum.textContent = String(state.idx + 1).padStart(2, "0");
   if(hsName) hsName.textContent = s.n;
+  if(hsIcon) hsIcon.innerHTML = STATION_ICONS[s.k] || "";
 }
 function renderRail(){
   const host = document.getElementById("stations");
@@ -846,6 +902,7 @@ function renderRail(){
     b.dataset.done = done ? "true" : "false";
     b.innerHTML =
       '<span class="num">'+String(i+1).padStart(2,"0")+'</span>'+
+      '<span class="station-icon">'+(STATION_ICONS[s.k]||"")+'</span>'+
       '<span><span class="nm">'+s.n+'</span><span class="cue">'+s.cue+'</span></span>'+
       '<span class="ct">'+c+' / '+s.t+'</span>'+
       '<span class="bar"><i style="width:'+Math.round(Math.min(1,c/s.t)*100)+'%"></i></span>';
